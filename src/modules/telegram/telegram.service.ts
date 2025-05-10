@@ -6,16 +6,33 @@ import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
 import { WhisperService } from '../whisper/whisper.service';
+import { GptService } from '../gpt/gpt.service';
 
+/**
+ * Service responsible for handling Telegram bot operations.
+ * This service manages voice message processing, transcription, and email information extraction.
+ * 
+ * @class TelegramService
+ * @implements {OnModuleInit}
+ */
 @Injectable()
 export class TelegramService implements OnModuleInit {
   private readonly bot: Telegraf;
   private readonly logger = new Logger(TelegramService.name);
   private readonly tmpDir: string;
 
+  /**
+   * Creates an instance of TelegramService.
+   * 
+   * @param {ConfigService} configService - Service for accessing configuration values
+   * @param {WhisperService} whisperService - Service for voice message transcription
+   * @param {GptService} gptService - Service for email information extraction
+   * @throws {Error} If TELEGRAM_BOT_TOKEN is not defined in environment variables
+   */
   constructor(
     private configService: ConfigService,
     private whisperService: WhisperService,
+    private gptService: GptService,
   ) {
     const token = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
     if (!token) {
@@ -26,12 +43,24 @@ export class TelegramService implements OnModuleInit {
     this.ensureTmpDirectory();
   }
 
+  /**
+   * Ensures the temporary directory exists for storing voice messages.
+   * Creates the directory if it doesn't exist.
+   * 
+   * @private
+   */
   private ensureTmpDirectory(): void {
     if (!fs.existsSync(this.tmpDir)) {
       fs.mkdirSync(this.tmpDir, { recursive: true });
     }
   }
 
+  /**
+   * Lifecycle hook that is called once the module has been initialized.
+   * Sets up bot handlers and launches the bot.
+   * 
+   * @public
+   */
   onModuleInit() {
     this.setupBotHandlers();
     this.bot.launch()
@@ -43,11 +72,20 @@ export class TelegramService implements OnModuleInit {
     process.once('SIGTERM', () => this.bot.stop('SIGTERM'));
   }
 
+  /**
+   * Sets up all bot command and message handlers.
+   * Configures start, help commands and voice message handling.
+   * 
+   * @private
+   */
   private setupBotHandlers(): void {
     this.bot.start((ctx) => {
       ctx.reply(
-        '👋 Welcome! I can transcribe your voice messages to text.\n\n' +
-        'Just send me a voice message and I\'ll convert it to text for you.\n\n' +
+        '👋 Welcome! I can help you with voice messages.\n\n' +
+        '🎯 What I can do:\n' +
+        '1. Transcribe voice messages to text\n' +
+        '2. Extract email information from your voice\n\n' +
+        'Just send me a voice message and I\'ll process it for you!\n\n' +
         'Use /help to see available commands.'
       );
     });
@@ -57,7 +95,11 @@ export class TelegramService implements OnModuleInit {
         '🎯 Available commands:\n\n' +
         '/start - Start the bot\n' +
         '/help - Show this help message\n\n' +
-        'Just send a voice message to get it transcribed!'
+        '📝 How to use:\n' +
+        '1. Send a voice message\n' +
+        '2. I\'ll transcribe it\n' +
+        '3. If it contains email information, I\'ll extract it\n\n' +
+        '💡 Tip: Speak clearly and mention the email details you want to include!'
       );
     });
 
@@ -77,6 +119,14 @@ export class TelegramService implements OnModuleInit {
     });
   }
 
+  /**
+   * Handles incoming voice messages.
+   * Downloads, transcribes, and extracts email information from the voice message.
+   * 
+   * @param {Context & { message: Message.VoiceMessage }} ctx - Telegram context with voice message
+   * @throws {Error} If voice message processing fails
+   * @private
+   */
   private async handleVoiceMessage(ctx: Context & { message: Message.VoiceMessage }): Promise<void> {
     const fileId = ctx.message.voice.file_id;
     const fileUrl = await this.getFileUrl(fileId);
@@ -92,7 +142,7 @@ export class TelegramService implements OnModuleInit {
 
       // Transcribe the voice message
       const transcription = await this.whisperService.transcribe(filePath, {
-        language: 'en', // Default to English
+        language: 'en',
         responseFormat: 'text',
       });
 
@@ -101,6 +151,24 @@ export class TelegramService implements OnModuleInit {
         '✅ Here\'s your transcription:\n\n' +
         transcription
       );
+
+      // Try to extract email information
+      try {
+        const emailInfo = await this.gptService.extractEmailFields(transcription);
+        
+        // Format the email information nicely
+        const emailMessage = 
+          '📧 I found email information in your message:\n\n' +
+          `📨 To: ${emailInfo.data.to}\n` +
+          `📝 Subject: ${emailInfo.data.subject}\n\n` +
+          `📄 Body:\n${emailInfo.data.body}\n\n` +
+          '💡 You can copy this information to compose your email.';
+
+        await ctx.reply(emailMessage);
+      } catch (emailError) {
+        this.logger.debug('No email information found in the message');
+        await ctx.reply('No email information found in the message');
+      }
 
     } catch (error) {
       this.logger.error(`Failed to process voice message: ${error.message}`);
@@ -114,6 +182,14 @@ export class TelegramService implements OnModuleInit {
     }
   }
 
+  /**
+   * Retrieves the download URL for a Telegram file.
+   * 
+   * @param {string} fileId - Telegram file ID
+   * @returns {Promise<string>} The download URL for the file
+   * @throws {Error} If file URL retrieval fails
+   * @private
+   */
   private async getFileUrl(fileId: string): Promise<string> {
     try {
       const token = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
@@ -130,6 +206,15 @@ export class TelegramService implements OnModuleInit {
     }
   }
 
+  /**
+   * Downloads a file from a URL to a specified destination.
+   * 
+   * @param {string} url - The URL to download from
+   * @param {string} destination - The local path to save the file
+   * @returns {Promise<void>}
+   * @throws {Error} If file download fails
+   * @private
+   */
   private async downloadFile(url: string, destination: string): Promise<void> {
     const writer = fs.createWriteStream(destination);
     
