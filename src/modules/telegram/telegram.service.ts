@@ -5,6 +5,7 @@ import { Message } from 'telegraf/typings/core/types/typegram';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
+import { WhisperService } from '../whisper/whisper.service';
 
 @Injectable()
 export class TelegramService implements OnModuleInit {
@@ -12,7 +13,10 @@ export class TelegramService implements OnModuleInit {
   private readonly logger = new Logger(TelegramService.name);
   private readonly tmpDir: string;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private whisperService: WhisperService,
+  ) {
     const token = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
     if (!token) {
       throw new Error('TELEGRAM_BOT_TOKEN is not defined');
@@ -41,11 +45,20 @@ export class TelegramService implements OnModuleInit {
 
   private setupBotHandlers(): void {
     this.bot.start((ctx) => {
-      ctx.reply('👋 Welcome! I can process voice messages. Just send me a voice message and I\'ll handle it.');
+      ctx.reply(
+        '👋 Welcome! I can transcribe your voice messages to text.\n\n' +
+        'Just send me a voice message and I\'ll convert it to text for you.\n\n' +
+        'Use /help to see available commands.'
+      );
     });
 
     this.bot.help((ctx) => {
-      ctx.reply('🎯 How to use this bot:\n\n1. Send a voice message\n2. Wait for processing\n3. Get your results');
+      ctx.reply(
+        '🎯 Available commands:\n\n' +
+        '/start - Start the bot\n' +
+        '/help - Show this help message\n\n' +
+        'Just send a voice message to get it transcribed!'
+      );
     });
 
     this.bot.on('voice', async (ctx) => {
@@ -69,15 +82,26 @@ export class TelegramService implements OnModuleInit {
     const fileUrl = await this.getFileUrl(fileId);
     const filePath = path.join(this.tmpDir, `${fileId}.ogg`);
 
-    await ctx.reply('⏳ Processing your voice message...');
-
     try {
+      // Send initial response
+      await ctx.reply('⏳ Processing your voice message...');
+
+      // Download the voice message
       await this.downloadFile(fileUrl, filePath);
       this.logger.log(`Voice message downloaded successfully: ${filePath}`);
 
-      // Here you can add your voice processing logic
-      // For now, we'll just acknowledge receipt
-      await ctx.reply('✅ Voice message received and saved successfully!');
+      // Transcribe the voice message
+      const transcription = await this.whisperService.transcribe(filePath, {
+        language: 'pt', // Default to Portuguese
+        responseFormat: 'text',
+      });
+
+      // Send the transcription
+      await ctx.reply(
+        '✅ Here\'s your transcription:\n\n' +
+        transcription
+      );
+
     } catch (error) {
       this.logger.error(`Failed to process voice message: ${error.message}`);
       await ctx.reply('❌ Failed to process your voice message. Please try again.');

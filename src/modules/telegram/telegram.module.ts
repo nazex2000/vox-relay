@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TelegramService } from './telegram.service';
-import { ConfigModule } from '@nestjs/config';
+import { WhisperModule } from '../whisper/whisper.module';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [WhisperModule],
   providers: [TelegramService],
+  exports: [TelegramService],
 })
 export class TelegramModule {}
