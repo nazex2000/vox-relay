@@ -92,7 +92,7 @@ export class TelegramService implements OnModuleInit {
 
       // Transcribe the voice message
       const transcription = await this.whisperService.transcribe(filePath, {
-        language: 'pt', // Default to Portuguese
+        language: 'en', // Default to English
         responseFormat: 'text',
       });
 

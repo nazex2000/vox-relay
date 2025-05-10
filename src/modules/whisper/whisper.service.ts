@@ -24,6 +24,18 @@ export class WhisperService {
   constructor(private configService: ConfigService) {
     this.tmpDir = path.resolve(__dirname, '../../../tmp');
     this.ensureTmpDirectory();
+    this.configureFFmpeg();
+  }
+
+  private configureFFmpeg() {
+    // Set FFmpeg path for macOS
+    const ffmpegPath = '/opt/homebrew/bin/ffmpeg';
+    if (fs.existsSync(ffmpegPath)) {
+      ffmpeg.setFfmpegPath(ffmpegPath);
+      this.logger.log('FFmpeg configured successfully');
+    } else {
+      this.logger.warn('FFmpeg not found in default path, using system PATH');
+    }
   }
 
   private ensureTmpDirectory(): void {
@@ -147,7 +159,13 @@ export class WhisperService {
         },
       );
 
-      return response.data.text;
+      //Return to console the response
+      console.log("======================= VOX RELAY =========================");
+      console.log("Transcription Response");
+      console.log(response.data);
+      console.log("================================================");
+
+      return response.data;
     } catch (error) {
       if (error instanceof AxiosError) {
         if (error.response?.status === 401) {
