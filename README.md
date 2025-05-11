@@ -1,98 +1,184 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🎙️ Vox Relay
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+<div align="center">
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+![NestJS](https://img.shields.io/badge/NestJS-EA2845?style=for-the-badge&logo=nestjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)
 
-## Description
+**Enterprise-grade voice-to-email transcription system powered by AI**
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+[Features](#features) •
+[Installation](#installation) •
+[Configuration](#configuration) •
+[Usage](#usage) •
+[Architecture](#architecture) •
+[Contributing](#contributing) •
+[License](#license)
 
-## Project setup
+</div>
 
+## ✨ Features
+
+- 🎙️ **Advanced Voice Transcription**: High-accuracy voice-to-text conversion using OpenAI's Whisper API
+- 📧 **Intelligent Email Extraction**: AI-powered extraction of email components from transcribed text
+- 🤖 **Robust Telegram Integration**: Production-ready Telegram bot with comprehensive error handling
+- 📤 **Enterprise Email Delivery**: Secure and reliable email sending with SMTP integration
+- 🔒 **Enterprise Security**: Comprehensive input validation, error handling, and secure configuration
+- 📝 **Production Logging**: Structured logging with multiple severity levels and detailed context
+
+## 🚀 Installation
+
+1. Clone the repository:
 ```bash
-$ npm install
+git clone https://github.com/your-username/vox-relay.git
+cd vox-relay
 ```
 
-## Compile and run the project
-
+2. Install dependencies:
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
-
+3. Install FFmpeg (required for audio processing):
 ```bash
-# unit tests
-$ npm run test
+# macOS
+brew install ffmpeg
 
-# e2e tests
-$ npm run test:e2e
+# Ubuntu/Debian
+sudo apt-get install ffmpeg
 
-# test coverage
-$ npm run test:cov
+# Windows (using Chocolatey)
+choco install ffmpeg
 ```
 
-## Deployment
+## ⚙️ Configuration
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+1. Create a `.env` file in the project root:
+```env
+# Application Settings
+NODE_ENV=development
+PORT=3000
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+# Telegram Bot Configuration
+TELEGRAM_BOT_TOKEN=your_bot_token
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# OpenAI API Configuration
+OPENAI_API_KEY=your_api_key
+
+# SMTP Configuration
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_email@example.com
+SMTP_PASS=your_password
+SMTP_SECURE=false
+
+# Optional Settings
+MAX_FILE_SIZE=25000000  # 25MB in bytes
+REQUEST_TIMEOUT=30000   # 30 seconds in milliseconds
+LOG_LEVEL=debug        # debug, info, warn, error
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+2. Configure required environment variables:
+   - Obtain a bot token from [@BotFather](https://t.me/botfather)
+   - Create an API key from [OpenAI Dashboard](https://platform.openai.com)
+   - Configure SMTP credentials for email delivery
 
-## Resources
+## 🎯 Usage
 
-Check out a few resources that may come in handy when working with NestJS:
+1. Start the server:
+```bash
+npm run start:dev
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+2. Send a voice message to your Telegram bot
+3. The bot will:
+   - Transcribe the voice message using OpenAI Whisper
+   - Extract email components using GPT-4
+   - Present the extracted information for confirmation
+   - Send the email upon confirmation
 
-## Support
+## 🏗️ Architecture
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+The project is built using NestJS and follows a modular, microservice-oriented architecture:
 
-## Stay in touch
+### Core Modules
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- **TelegramModule**: Handles Telegram bot integration and message processing
+  - Manages bot lifecycle and graceful shutdown
+  - Implements robust error handling and retry mechanisms
+  - Provides user-friendly interaction flows
 
-## License
+- **WhisperModule**: Manages voice message processing
+  - Handles audio file validation and conversion
+  - Integrates with OpenAI's Whisper API
+  - Implements efficient file management
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- **GptModule**: Processes transcribed text
+  - Extracts email components using GPT-4
+  - Implements intelligent text analysis
+  - Provides structured email data
+
+- **EmailModule**: Manages email operations
+  - Handles SMTP configuration and validation
+  - Implements secure email delivery
+  - Provides email template management
+
+### Data Flow
+
+1. Voice Message Reception → TelegramService
+   - Validates incoming message
+   - Downloads voice file
+   - Initiates processing pipeline
+
+2. Voice Processing → WhisperService
+   - Converts audio to MP3
+   - Transcribes using Whisper API
+   - Returns structured text
+
+3. Text Analysis → GptService
+   - Analyzes transcribed text
+   - Extracts email components
+   - Validates extracted data
+
+4. Email Delivery → EmailService
+   - Formats email content
+   - Validates SMTP configuration
+   - Sends email with retry mechanism
+
+## 🤝 Contributing
+
+We welcome contributions from the community. Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Implement your changes with proper testing
+4. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+5. Push to the branch (`git push origin feature/AmazingFeature`)
+6. Open a Pull Request
+
+### Development Guidelines
+
+- Follow TypeScript best practices
+- Maintain comprehensive test coverage
+- Update documentation for new features
+- Follow the existing code style
+- Add appropriate logging and error handling
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [NestJS](https://nestjs.com/) - Enterprise Node.js framework
+- [OpenAI](https://openai.com/) - State-of-the-art AI APIs
+- [Telegraf](https://telegraf.js.org/) - Robust Telegram Bot framework
+- [FFmpeg](https://ffmpeg.org/) - Industry-standard audio processing
+
+---
+
+<div align="center">
+Built with ❤️ by [Your Name]
+</div>
