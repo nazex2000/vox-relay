@@ -87,10 +87,11 @@ export class GptService {
                 throw new Error('No response from GPT');
             }
 
-            console.log("======================= VOX RELAY - Copywrite =========================");
-            console.log("GPT Response");
-            console.log(rawText);
-            console.log("================================================");
+            this.logger.debug('GPT Response:', {
+                text: rawText,
+                model: 'gpt-4-turbo-preview',
+                prompt: prompt,
+            });
 
             // Parse and validate the response
             const parsedResponse = JSON.parse(rawText);

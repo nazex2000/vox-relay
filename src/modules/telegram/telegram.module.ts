@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TelegramService } from './telegram.service';
 import { WhisperModule } from '../whisper/whisper.module';
 import { GptModule } from '../gpt/gpt.module';
+import { EmailModule } from '../email/email.module';
 
 /**
  * Module responsible for Telegram bot functionality.
@@ -15,6 +16,7 @@ import { GptModule } from '../gpt/gpt.module';
     ConfigModule,
     WhisperModule,
     GptModule,
+    EmailModule
   ],
   providers: [TelegramService],
   exports: [TelegramService],

@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { WhisperService } from '../whisper/whisper.service';
 import { GptService } from '../gpt/gpt.service';
+import { EmailService } from '../email/email.service';
 
 /**
  * Service responsible for handling Telegram bot operations.
@@ -27,12 +28,14 @@ export class TelegramService implements OnModuleInit {
    * @param {ConfigService} configService - Service for accessing configuration values
    * @param {WhisperService} whisperService - Service for voice message transcription
    * @param {GptService} gptService - Service for email information extraction
+   * @param {EmailService} emailService - Service for sending emails
    * @throws {Error} If TELEGRAM_BOT_TOKEN is not defined in environment variables
    */
   constructor(
     private configService: ConfigService,
     private whisperService: WhisperService,
     private gptService: GptService,
+    private emailService: EmailService,
   ) {
     const token = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
     if (!token) {
@@ -84,7 +87,8 @@ export class TelegramService implements OnModuleInit {
         '👋 Welcome! I can help you with voice messages.\n\n' +
         '🎯 What I can do:\n' +
         '1. Transcribe voice messages to text\n' +
-        '2. Extract email information from your voice\n\n' +
+        '2. Extract email information from your voice\n' +
+        '3. Send emails directly from voice messages\n\n' +
         'Just send me a voice message and I\'ll process it for you!\n\n' +
         'Use /help to see available commands.'
       );
@@ -98,7 +102,8 @@ export class TelegramService implements OnModuleInit {
         '📝 How to use:\n' +
         '1. Send a voice message\n' +
         '2. I\'ll transcribe it\n' +
-        '3. If it contains email information, I\'ll extract it\n\n' +
+        '3. If it contains email information, I\'ll extract it\n' +
+        '4. You can choose to send the email directly\n\n' +
         '💡 Tip: Speak clearly and mention the email details you want to include!'
       );
     });
@@ -162,9 +167,34 @@ export class TelegramService implements OnModuleInit {
           `📨 To: ${emailInfo.data.to}\n` +
           `📝 Subject: ${emailInfo.data.subject}\n\n` +
           `📄 Body:\n${emailInfo.data.body}\n\n` +
-          '💡 You can copy this information to compose your email.';
+          'Would you like to send this email? Reply with "yes" to send or "no" to cancel.';
 
         await ctx.reply(emailMessage);
+
+        // Create a one-time message handler
+        const messageHandler = this.bot.on('message', async (ctx) => {
+          if (ctx.message && 'text' in ctx.message) {
+            const text = ctx.message.text.toLowerCase();
+            
+            if (text === 'yes') {
+              try {
+                // Send the email
+                const messageId = await this.emailService.sendEmail(emailInfo.data);
+                await ctx.reply('✅ Email sent successfully!');
+                this.logger.log(`Email sent with ID: ${messageId}`);
+              } catch (error) {
+                this.logger.error('Failed to send email:', error);
+                await ctx.reply('❌ Failed to send email. Please try again later.');
+              }
+            } else if (text === 'no') {
+              await ctx.reply('❌ Email cancelled.');
+            } else {
+              await ctx.reply('Please reply with "yes" to send the email or "no" to cancel.');
+              return; // Keep listening
+            }
+          }
+        });
+
       } catch (emailError) {
         this.logger.debug('No email information found in the message');
         await ctx.reply('No email information found in the message');

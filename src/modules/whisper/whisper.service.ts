@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import { createReadStream } from 'fs';
 import axios, { AxiosError } from 'axios';
 import * as FormData from 'form-data';
+import { OpenAI } from 'openai';
 
 /**
  * Options for audio transcription.
@@ -35,6 +36,7 @@ export class WhisperService {
   private readonly tmpDir: string;
   private readonly supportedFormats = ['.ogg', '.mp3', '.wav', '.m4a', '.webm'];
   private readonly maxFileSize = 25 * 1024 * 1024; // 25MB (Whisper API limit)
+  private readonly openai: OpenAI;
 
   /**
    * Creates an instance of WhisperService.
@@ -45,6 +47,7 @@ export class WhisperService {
     this.tmpDir = path.resolve(__dirname, '../../../tmp');
     this.ensureTmpDirectory();
     this.configureFFmpeg();
+    this.openai = new OpenAI({ apiKey: this.configService.get<string>('OPENAI_API_KEY') });
   }
 
   /**
@@ -233,11 +236,11 @@ export class WhisperService {
         },
       );
 
-      //Return to console the response
-      console.log("======================= VOX RELAY - Whisper =========================");
-      console.log("Transcription Response");
-      console.log(response.data);
-      console.log("================================================");
+      this.logger.debug('Transcription Response:', {
+        text: response.data,
+        language: options.language,
+        format: options.responseFormat,
+      });
 
       return response.data;
     } catch (error) {
